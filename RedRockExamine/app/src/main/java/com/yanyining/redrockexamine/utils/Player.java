@@ -1,4 +1,4 @@
-package com.yanyining.redrockexamine.ui;
+package com.yanyining.redrockexamine.utils;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;

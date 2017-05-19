@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 
 import com.yanyining.redrockexamine.R;
+import com.yanyining.redrockexamine.utils.Player;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
