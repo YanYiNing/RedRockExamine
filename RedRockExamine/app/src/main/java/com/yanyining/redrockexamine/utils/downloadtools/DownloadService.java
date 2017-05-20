@@ -14,7 +14,7 @@ import android.support.v7.app.NotificationCompat;
 import android.widget.Toast;
 
 import com.yanyining.redrockexamine.R;
-import com.yanyining.redrockexamine.ui.MainActivity;
+import com.yanyining.redrockexamine.ui.HomeActivity;
 
 import java.io.File;
 
@@ -108,7 +108,7 @@ public class DownloadService extends Service {
     }
 
     private Notification getNotification (String title, int progress){
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setSmallIcon(R.mipmap.ic_launcher);

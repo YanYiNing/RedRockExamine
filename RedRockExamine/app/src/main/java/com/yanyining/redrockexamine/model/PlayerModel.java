@@ -1,4 +1,4 @@
-package com.yanyining.redrockexamine.utils;
+package com.yanyining.redrockexamine.model;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -7,27 +7,36 @@ import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+
+import com.yanyining.redrockexamine.model.impl.PlayerModelImp;
+import com.yanyining.redrockexamine.presenter.impl.PlayerOnSuccessListenerImp;
 
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by YanYiNing on 2017/5/20.
  */
 
-public class Player implements MediaPlayer.OnBufferingUpdateListener,
+public class PlayerModel implements PlayerModelImp,MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,
-        SurfaceHolder.Callback {
+        SurfaceHolder.Callback{
     private int videoWidth;
     private int videoHeight;
     private MediaPlayer mediaPlayer;
     private SurfaceHolder surfaceHolder;
     private SeekBar skbProgress;
+    PlayerOnSuccessListenerImp listener;
     private Timer mTimer=new Timer();
-    public Player(SurfaceView surfaceView, SeekBar skbProgress)
+
+    public PlayerModel(SurfaceView surfaceView, SeekBar skbProgress, PlayerOnSuccessListenerImp listener)
     {
+        this.listener = listener;
         this.skbProgress=skbProgress;
         surfaceHolder=surfaceView.getHolder();
         surfaceHolder.addCallback(this);
@@ -62,14 +71,15 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             }
         };
     };
-    //*****************************************************
 
 
+    @Override
     public void play()
     {
         mediaPlayer.start();
     }
 
+    @Override
     public void playUrl(String videoUrl)
     {
         try {
@@ -94,12 +104,13 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         }
     }
 
-
+    @Override
     public void pause()
     {
         mediaPlayer.pause();
     }
 
+    @Override
     public void stop()
     {
         if (mediaPlayer != null) {
@@ -108,6 +119,17 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             mediaPlayer = null;
         }
     }
+
+    @Override
+    public void before() {
+
+    }
+
+    @Override
+    public void next() {
+
+    }
+
     private SeekBar.OnSeekBarChangeListener change = new SeekBar.OnSeekBarChangeListener() {
         int progress;
         @Override
@@ -127,10 +149,10 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             // seekTo()的参数是相对与影片时间的数字，而不是与seekBar.getMax()相对的数字
-
             mediaPlayer.seekTo(progress);
         }
     };
+
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
         Log.e("mediaPlayer", "surface changed");
@@ -186,5 +208,22 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     public boolean onError(MediaPlayer mp, int what, int extra) {
         mediaPlayer.release();
         return false;
+    }
+
+    
+    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+
+        if (width == 0 || height == 0) {
+            Log.e(TAG, "invalid video width(" + width + ") or height(" + height
+                    + ")");
+            return;
+        }
+        Log.d(TAG, "onVideoSizeChanged width:" + width + " height:" + height);
+        int w = listener.getHeight() * width / height;
+        int margin = (listener.getHeight() - w) / 2;
+        Log.d(TAG, "margin:" + margin);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
     }
 }

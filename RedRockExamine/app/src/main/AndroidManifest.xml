@@ -19,9 +19,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.MainActivity" />
         <activity android:name=".ui.HomeActivity" />
-        <activity android:name=".ui.PlayerActivity"></activity>
+        <activity android:name=".ui.PlayerActivity"
+            android:launchMode="singleTask"
+            />
+
     </application>
 
 </manifest>

@@ -5,6 +5,8 @@ package com.yanyining.redrockexamine.view;
  */
 
 public interface PlayerActivityImp {
-    void showSeekBar();
-    void hideSeekBar()
+    void show();
+    void hide();
+    void changePlayButton();
+    void setSurfaceView();
 }

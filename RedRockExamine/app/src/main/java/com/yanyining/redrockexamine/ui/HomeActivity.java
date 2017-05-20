@@ -1,7 +1,7 @@
 package com.yanyining.redrockexamine.ui;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
@@ -32,10 +32,11 @@ public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
     }
 
     @Override
-    public void setRecyclerView(ArrayList<HomeData> dataList) {
+    public void setRecyclerView(final ArrayList<HomeData> dataList) {
         LinearLayoutManager lm = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(lm);
         HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList);
         recyclerView.setAdapter(adapter);
+
     }
 }

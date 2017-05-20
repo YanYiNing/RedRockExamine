@@ -1,6 +1,7 @@
 package com.yanyining.redrockexamine.ui.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import com.yanyining.redrockexamine.R;
 import com.yanyining.redrockexamine.bean.HomeData;
+import com.yanyining.redrockexamine.ui.PlayerActivity;
 import com.yanyining.redrockexamine.utils.imageTools.ImageLoader;
 
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (context == null) {
+        if(context == null) {
             context = parent.getContext();
         }
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_home, parent, false);
@@ -64,6 +66,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         holder.zan.setText(String.valueOf(data.love));
         holder.cai.setText(String.valueOf(data.hate));
         holder.text.setText(data.text);
+        holder.text.setOnClickListener(new ItemListener(data.video_uri));
         ImageLoader.build(context).bindBitmap(data.profile_image, holder.avatar,  holder.avatar.getWidth(), holder.avatar.getHeight());
     }
 
@@ -72,5 +75,19 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         return dataList.size();
     }
 
+    class ItemListener implements View.OnClickListener{
+        String url;
+
+        public ItemListener(String url) {
+            this.url = url;
+        }
+
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(context, PlayerActivity.class);
+            intent.putExtra("url", url);
+            context.startActivity(intent);
+        }
+    }
 
 }
