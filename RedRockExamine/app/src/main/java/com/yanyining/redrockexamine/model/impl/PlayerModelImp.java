@@ -1,7 +1,5 @@
 package com.yanyining.redrockexamine.model.impl;
 
-import com.yanyining.redrockexamine.presenter.impl.PlayerOnSuccessListenerImp;
-
 /**
  * Created by YanYiNing on 2017/5/20.
  */

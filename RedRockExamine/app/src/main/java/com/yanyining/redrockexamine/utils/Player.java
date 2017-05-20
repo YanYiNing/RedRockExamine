@@ -7,6 +7,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 import java.io.IOException;
@@ -20,25 +21,54 @@ import java.util.TimerTask;
 public class Player implements MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,MediaPlayer.OnPreparedListener,
         SurfaceHolder.Callback {
-    private int videoWidth;
-    private int videoHeight;
+
+    int mSurfaceViewWidth, mSurfaceViewHeight;
     private MediaPlayer mediaPlayer;
     private SurfaceHolder surfaceHolder;
+    private SurfaceView surfaceView;
+
     private SeekBar skbProgress;
-    private Timer mTimer=new Timer();
-    public Player(SurfaceView surfaceView, SeekBar skbProgress)
-    {
-        this.skbProgress=skbProgress;
-        surfaceHolder=surfaceView.getHolder();
+    private LinearLayout linearLayout;
+
+    private Timer mTimer = new Timer();
+
+    public Player(){};
+
+    public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout){
+        mSurfaceViewWidth = 1080;
+        mSurfaceViewHeight = 1920;
+        surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
+        this.skbProgress = skbProgress;
         skbProgress.setOnSeekBarChangeListener(change);
-        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        this.surfaceView = surfaceView;
+        this.linearLayout = linearLayout;
+        mTimer.schedule(mTimerTask, 0, 1000);
+        try {
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDisplay(surfaceHolder);
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.setOnBufferingUpdateListener(this);
+            mediaPlayer.setOnPreparedListener(this);
+        } catch (Exception e) {
+            Log.e("mediaPlayer", "error", e);
+        }
+        Log.e("mediaPlayer", "surface created");
+    }
+
+    public Player(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, int weight, int height)
+    {
+        mSurfaceViewWidth = weight;
+        mSurfaceViewHeight = height;
+        surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.addCallback(this);
+        this.skbProgress = skbProgress;
+        skbProgress.setOnSeekBarChangeListener(change);
+        this.surfaceView = surfaceView;
+        this.linearLayout = linearLayout;
         mTimer.schedule(mTimerTask, 0, 1000);
     }
 
-    /*******************************************************
-     * 通过定时器和Handler来更新进度条
-     ******************************************************/
     TimerTask mTimerTask = new TimerTask() {
         @Override
         public void run() {
@@ -62,8 +92,6 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             }
         };
     };
-    //*****************************************************
-
 
     public void play()
     {
@@ -94,7 +122,6 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         }
     }
 
-
     public void pause()
     {
         mediaPlayer.pause();
@@ -108,6 +135,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             mediaPlayer = null;
         }
     }
+
     private SeekBar.OnSeekBarChangeListener change = new SeekBar.OnSeekBarChangeListener() {
         int progress;
         @Override
@@ -131,9 +159,9 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             mediaPlayer.seekTo(progress);
         }
     };
+
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
-        Log.e("mediaPlayer", "surface changed");
     }
 
     @Override
@@ -151,21 +179,42 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder arg0) {
-        Log.e("mediaPlayer", "surface destroyed");
-    }
+    public void surfaceDestroyed(SurfaceHolder arg0) {}
 
 
     @Override
-    /**
-     * 通过onPrepared播放
-     */
     public void onPrepared(MediaPlayer arg0) {
-        videoWidth = mediaPlayer.getVideoWidth();
-        videoHeight = mediaPlayer.getVideoHeight();
-        if (videoHeight != 0 && videoWidth != 0) {
-            arg0.start();
+        int vWidth = mediaPlayer.getVideoWidth();
+        int vHeight = mediaPlayer.getVideoHeight();
+
+        // 该LinearLayout的父容器 android:orientation="vertical" 必须
+        int lw = linearLayout.getWidth();
+        int lh = linearLayout.getHeight();
+
+        // 如果video的宽或者高超出了当前屏幕的大小，则要进行缩放
+        float wRatio = (float) vWidth / (float) lw;
+        float hRatio = (float) vHeight / (float) lh;
+
+        // 选择大的一个进行缩放
+        float ratio = Math.max(wRatio, hRatio);
+        vWidth = (int) Math.ceil((float) vWidth / ratio);
+        vHeight = (int) Math.ceil((float) vHeight / ratio);
+
+        // 设置surfaceView的布局参数
+        LinearLayout.LayoutParams lp= new LinearLayout.LayoutParams(vWidth, vHeight);
+
+        if (wRatio > hRatio){
+            int margin = (lh - vHeight) / 2;
+            lp.setMargins(0, margin, 0, margin);
+        } else {
+            int margin = (lw - vWidth) / 2;
+            lp.setMargins(margin, 0, margin, 0);
         }
+
+        surfaceView.setLayoutParams(lp);
+
+        arg0.start();
+
         Log.e("mediaPlayer", "onPrepared");
     }
 
@@ -177,8 +226,8 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     @Override
     public void onBufferingUpdate(MediaPlayer arg0, int bufferingProgress) {
         skbProgress.setSecondaryProgress(bufferingProgress);
-        int currentProgress=skbProgress.getMax()*mediaPlayer.getCurrentPosition()/mediaPlayer.getDuration();
-        Log.e(currentProgress+"% play", bufferingProgress + "% buffer");
+        int currentProgress = skbProgress.getMax()*mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
+        Log.e(currentProgress+"% play_btn1", bufferingProgress + "% buffer");
 
     }
 
@@ -187,4 +236,5 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         mediaPlayer.release();
         return false;
     }
+
 }

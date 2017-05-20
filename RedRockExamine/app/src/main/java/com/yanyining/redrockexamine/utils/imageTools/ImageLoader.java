@@ -5,12 +5,15 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
+import android.media.ThumbnailUtils;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.StatFs;
+import android.provider.MediaStore;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.widget.ImageView;
@@ -28,6 +31,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -75,7 +79,6 @@ public class ImageLoader {
         public void handleMessage(Message msg) {
             LoaderResult result = (LoaderResult) msg.obj;
             ImageView imageView = result.imageView;
-            imageView.setImageBitmap(result.bitmap);
             String uri = (String) imageView.getTag(TAG_KEY_URI);
             if (uri.equals(result.uri)) {
                 imageView.setImageBitmap(result.bitmap);
@@ -184,9 +187,60 @@ public class ImageLoader {
         bindBitmap(uri, imageView, 0, 0);
     }
 
+    public void bindThumbnail(final String uri, final ImageView imageView,
+                           final int reqWidth, final int reqHeight) {
+        imageView.setTag(TAG_KEY_URI, uri);
+        imageView.setImageResource(R.drawable.empty);
+        Bitmap bitmap = loadBitmapFromMemCache(uri);
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+            return;
+        }
+
+        Runnable loadBitmapTask = new Runnable() {
+
+            @Override
+            public void run() {
+                Bitmap bitmap = loadThumbnail(uri, reqWidth, reqHeight);
+                if (bitmap != null) {
+                    LoaderResult result = new LoaderResult(imageView, uri, bitmap);
+                    mMainHandler.obtainMessage(MESSAGE_POST_RESULT, result).sendToTarget();
+                }
+            }
+        };
+        THREAD_POOL_EXECUTOR.execute(loadBitmapTask);
+    }
+    public Bitmap loadThumbnail(String uri, int reqWidth, int reqHeight) {
+        Bitmap bitmap = loadBitmapFromMemCache(uri);
+        if (bitmap != null) {
+            Log.d(TAG, "loadBitmapFromMemCache,url:" + uri);
+            return bitmap;
+        }
+
+        try {
+            bitmap = loadBitmapFromDiskCache(uri, reqWidth, reqHeight);
+            if (bitmap != null) {
+                Log.d(TAG, "loadBitmapFromDisk,url:" + uri);
+                return bitmap;
+            }
+            bitmap = createVideoThumbnail(uri, reqWidth, reqHeight);
+            Log.d(TAG, "loadBitmapFromHttp,url:" + uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (bitmap == null && !mIsDiskLruCacheCreated) {
+            Log.w(TAG, "encounter error, DiskLruCache is not created.");
+            bitmap = downloadBitmapFromUrl(uri);
+        }
+
+        return bitmap;
+    }
+
     public void bindBitmap(final String uri, final ImageView imageView,
                            final int reqWidth, final int reqHeight) {
         imageView.setTag(TAG_KEY_URI, uri);
+        imageView.setImageResource(R.drawable.empty);
         Bitmap bitmap = loadBitmapFromMemCache(uri);
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
@@ -412,5 +466,52 @@ public class ImageLoader {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    private Bitmap createVideoThumbnail(String url, int width, int height) throws IOException {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            throw new RuntimeException("can not visit network from UI Thread.");
+        }
+        if (mDiskLruCache == null) {
+            return null;
+        }
+
+        Bitmap bitmap = null;
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        int kind = MediaStore.Video.Thumbnails.MINI_KIND;
+        try {
+            if (Build.VERSION.SDK_INT >= 14) {
+                retriever.setDataSource(url, new HashMap<String, String>());
+            } else {
+                retriever.setDataSource(url);
+            }
+            bitmap = retriever.getFrameAtTime();
+        } catch (IllegalArgumentException ex) {
+            // Assume this is a corrupt video file
+        } catch (RuntimeException ex) {
+            // Assume this is a corrupt video file.
+        } finally {
+            try {
+                retriever.release();
+            } catch (RuntimeException ex) {
+                // Ignore failures while cleaning up.
+            }
+        }
+        if (kind == MediaStore.Images.Thumbnails.MICRO_KIND && bitmap != null) {
+            bitmap = ThumbnailUtils.extractThumbnail(bitmap, width, height,
+                    ThumbnailUtils.OPTIONS_RECYCLE_INPUT);
+        }
+
+        String key = hashKeyFormUrl(url);
+        DiskLruCache.Editor editor = mDiskLruCache.edit(key);
+        //这个key会成为缓存文件的文件名
+        if (editor != null) {
+            OutputStream outputStream = editor.newOutputStream(DISK_CACHE_INDEX);
+            //接收一个index参数，创建一个输出流
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream);
+            editor.commit();
+            mDiskLruCache.flush();
+        }
+        return loadBitmapFromDiskCache(url, width, height);
     }
 }

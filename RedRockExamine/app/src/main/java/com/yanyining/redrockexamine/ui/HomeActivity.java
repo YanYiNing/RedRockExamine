@@ -39,4 +39,5 @@ public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
         recyclerView.setAdapter(adapter);
 
     }
+
 }

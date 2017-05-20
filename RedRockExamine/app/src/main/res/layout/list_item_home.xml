@@ -47,7 +47,83 @@
         android:textColor="@color/black"
         android:textSize="17sp"/>
 
-    
+
+    <FrameLayout
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@color/black">
+
+        <LinearLayout
+            android:id="@+id/home_item_sv_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <SurfaceView
+                android:id="@+id/home_item_sv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/home_item_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+        <ImageView
+            android:id="@+id/home_item_play_btn1"
+            android:src="@drawable/play_btn1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"/>
+
+
+
+        <LinearLayout
+            android:id="@+id/home_item_control_layout"
+            android:layout_marginTop="185dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:background="#333333"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/home_item_play_btn2"
+                android:src="@drawable/play_button"
+                android:padding="3dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+            <SeekBar
+                android:id="@+id/home_item_seek_bar"
+                android:layout_width="0dp"
+                android:layout_height="5dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"/>
+
+            <ImageView
+                android:id="@+id/home_item_download"
+                android:padding="3dp"
+                android:src="@drawable/download"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+            <ImageView
+                android:id="@+id/home_item_fullscreen"
+                android:padding="3dp"
+                android:src="@drawable/fullscreen"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
