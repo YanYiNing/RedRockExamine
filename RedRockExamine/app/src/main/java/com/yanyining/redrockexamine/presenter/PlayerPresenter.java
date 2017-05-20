@@ -17,9 +17,9 @@ public class PlayerPresenter implements PlayerPresenterImp, PlayerOnSuccessListe
     private PlayerActivity view;
     private PlayerModel model;
 
-    public PlayerPresenter(PlayerActivity view, SeekBar seekBar, SurfaceView sv) {
+    public PlayerPresenter(PlayerActivity view, SeekBar seekBar, SurfaceView sv, int weight, int height) {
         this.view = view;
-        model = new PlayerModel(sv, seekBar, this);
+        model = new PlayerModel(sv, seekBar, weight, height, this);
     }
 
     @Override
@@ -59,5 +59,10 @@ public class PlayerPresenter implements PlayerPresenterImp, PlayerOnSuccessListe
         int mSurfaceViewWidth = dm.widthPixels;
         int mSurfaceViewHeight = dm.heightPixels;
         return mSurfaceViewHeight;
+    }
+
+    @Override
+    public PlayerActivity getView() {
+        return view;
     }
 }

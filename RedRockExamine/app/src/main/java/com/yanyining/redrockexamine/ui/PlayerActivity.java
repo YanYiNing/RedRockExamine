@@ -3,6 +3,7 @@ package com.yanyining.redrockexamine.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
@@ -28,7 +29,11 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         Intent intent = getIntent();
         url = intent.getStringExtra("url");
         initResource();
-        presenter = new PlayerPresenter(this, seekBar, sv);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        presenter = new PlayerPresenter(this, seekBar, sv, width, height);
     }
     private void initResource() {
         btn_pause = (Button) findViewById(R.id.player_pause_button);
@@ -42,13 +47,14 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         btn_play.setOnClickListener(this);
         btn_stop.setOnClickListener(this);
         btn_replay.setOnClickListener(this);
+
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.player_play_button:
-                presenter.play(url);
+                presenter.playUrl(url);
                 break;
             case R.id.player_pause_button:
                 presenter.pause();

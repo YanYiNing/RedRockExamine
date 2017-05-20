@@ -7,17 +7,16 @@ import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
+import com.yanyining.redrockexamine.R;
 import com.yanyining.redrockexamine.model.impl.PlayerModelImp;
 import com.yanyining.redrockexamine.presenter.impl.PlayerOnSuccessListenerImp;
 
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by YanYiNing on 2017/5/20.
@@ -30,14 +29,19 @@ public class PlayerModel implements PlayerModelImp,MediaPlayer.OnBufferingUpdate
     private int videoHeight;
     private MediaPlayer mediaPlayer;
     private SurfaceHolder surfaceHolder;
+    int mSurfaceViewWidth, mSurfaceViewHeight;
     private SeekBar skbProgress;
+    private SurfaceView surfaceView;
     PlayerOnSuccessListenerImp listener;
     private Timer mTimer=new Timer();
 
-    public PlayerModel(SurfaceView surfaceView, SeekBar skbProgress, PlayerOnSuccessListenerImp listener)
+    public PlayerModel(SurfaceView surfaceView, SeekBar skbProgress, int weight, int height, PlayerOnSuccessListenerImp listener)
     {
         this.listener = listener;
         this.skbProgress=skbProgress;
+        this.surfaceView = surfaceView;
+        mSurfaceViewHeight = height;
+        mSurfaceViewWidth = weight;
         surfaceHolder=surfaceView.getHolder();
         surfaceHolder.addCallback(this);
         skbProgress.setOnSeekBarChangeListener(change);
@@ -185,6 +189,36 @@ public class PlayerModel implements PlayerModelImp,MediaPlayer.OnBufferingUpdate
     public void onPrepared(MediaPlayer arg0) {
         videoWidth = mediaPlayer.getVideoWidth();
         videoHeight = mediaPlayer.getVideoHeight();
+        int vWidth = mediaPlayer.getVideoWidth();
+        int vHeight = mediaPlayer.getVideoHeight();
+
+        // 该LinearLayout的父容器 android:orientation="vertical" 必须
+        LinearLayout linearLayout = (LinearLayout) listener.getView().findViewById(R.id.player_layout);
+        int lw = linearLayout.getWidth();
+        int lh = linearLayout.getHeight();
+
+            // 如果video的宽或者高超出了当前屏幕的大小，则要进行缩放
+            float wRatio = (float) vWidth / (float) lw;
+            float hRatio = (float) vHeight / (float) lh;
+
+            // 选择大的一个进行缩放
+            float ratio = Math.max(wRatio, hRatio);
+            vWidth = (int) Math.ceil((float) vWidth / ratio);
+            vHeight = (int) Math.ceil((float) vHeight / ratio);
+
+            // 设置surfaceView的布局参数
+            LinearLayout.LayoutParams lp= new LinearLayout.LayoutParams(vWidth, vHeight);
+
+            if (wRatio > hRatio){
+                int margin = (lh - vHeight) / 2;
+                lp.setMargins(0, margin, 0, margin);
+            } else {
+                int margin = (lw - vWidth) / 2;
+                lp.setMargins(margin, 0, margin, 0);
+            }
+
+            surfaceView.setLayoutParams(lp);
+
         if (videoHeight != 0 && videoWidth != 0) {
             arg0.start();
         }
@@ -210,20 +244,7 @@ public class PlayerModel implements PlayerModelImp,MediaPlayer.OnBufferingUpdate
         return false;
     }
 
-    
-    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
 
-        if (width == 0 || height == 0) {
-            Log.e(TAG, "invalid video width(" + width + ") or height(" + height
-                    + ")");
-            return;
-        }
-        Log.d(TAG, "onVideoSizeChanged width:" + width + " height:" + height);
-        int w = listener.getHeight() * width / height;
-        int margin = (listener.getHeight() - w) / 2;
-        Log.d(TAG, "margin:" + margin);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT);
-    }
+
+
 }
