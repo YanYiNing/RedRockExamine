@@ -57,6 +57,8 @@ public class HomeModel implements HomeModelImp {
                 data.profile_image = jsonObject.getString("profile_image");
                 data.video_uri = jsonObject.getString("video_uri");
                 data.weixin_url = jsonObject.getString("weixin_url");
+                String text = jsonObject.getString("text");
+                data.text = text.substring(9, text.length() - 5);;
                 dataList.add(data);
             }
         }catch (Exception e){
