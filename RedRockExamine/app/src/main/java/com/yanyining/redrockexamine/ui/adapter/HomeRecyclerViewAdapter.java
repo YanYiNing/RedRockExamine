@@ -1,7 +1,10 @@
 package com.yanyining.redrockexamine.ui.adapter;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -15,6 +18,7 @@ import android.widget.TextView;
 
 import com.yanyining.redrockexamine.R;
 import com.yanyining.redrockexamine.bean.HomeData;
+import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.ui.PlayerActivity;
 import com.yanyining.redrockexamine.utils.Player;
 import com.yanyining.redrockexamine.utils.imageTools.ImageLoader;
@@ -27,12 +31,16 @@ import java.util.ArrayList;
 
 public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerViewAdapter.ViewHolder> {
     ArrayList<HomeData> dataList;
+    private MyDatabaseHelper databaseHelper;
+    private SQLiteDatabase db;
     private Context context;
     private static Player player = new Player();
     boolean isLayoutHide = true;
 
-    public HomeRecyclerViewAdapter(ArrayList<HomeData> dataList) {
+    public HomeRecyclerViewAdapter(ArrayList<HomeData> dataList, MyDatabaseHelper databaseHelper) {
         this.dataList = dataList;
+        this.databaseHelper = databaseHelper;
+        db = databaseHelper.getWritableDatabase();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder{
@@ -95,13 +103,13 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         holder.zan.setText(String.valueOf(data.love));
         holder.cai.setText(String.valueOf(data.hate));
         holder.text.setText(data.text);
-        holder.fullscreen.setOnClickListener(new ToPlayerActivity(data.video_uri));
+        holder.fullscreen.setOnClickListener(new ToPlayerActivity(data.video_uri, holder.thumbnail, holder.playBtn1, holder.playBtn2));
         holder.url = data.video_uri;
         ImageLoader.build(context).bindBitmap(data.profile_image, holder.avatar,  holder.avatar.getWidth(), holder.avatar.getHeight());
         ImageLoader.build(context).bindThumbnail(data.video_uri, holder.thumbnail, holder.thumbnail.getWidth(), holder.thumbnail.getHeight());
         holder.frameLayout.setOnClickListener(new HideOrShowLayout(holder.controlLayout));
-        holder.playBtn1.setOnClickListener(new PlayBtn1Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, holder.url));
-        holder.playBtn2.setOnClickListener(new PlayBtn2Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, holder.url));
+        holder.playBtn1.setOnClickListener(new PlayBtn1Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, data));
+        holder.playBtn2.setOnClickListener(new PlayBtn2Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, data));
 
     }
 
@@ -133,21 +141,22 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         private ImageView thumbnail;
         private ImageView playBtn1;
         private ImageView playBtn2;
-        String url;
+        private HomeData data;
 
-        public PlayBtn1Listener(SeekBar seekBar, SurfaceView surfaceView, LinearLayout svLayout, ImageView thumbnail, ImageView playBtn1, ImageView playBtn2, String url) {
+        public PlayBtn1Listener(SeekBar seekBar, SurfaceView surfaceView, LinearLayout svLayout, ImageView thumbnail, ImageView playBtn1, ImageView playBtn2, HomeData data) {
             this.seekBar = seekBar;
             this.surfaceView = surfaceView;
             this.svLayout = svLayout;
             this.thumbnail = thumbnail;
             this.playBtn1 = playBtn1;
             this.playBtn2 = playBtn2;
-            this.url = url;
+            this.data = data;
         }
 
         @Override
         public void onClick(View v) {
-            if(!url.equals(player.url)){
+            writeToHistory(db, data);
+            if(!data.video_uri.equals(player.url)){
                 player.stop();
             }
             if (!player.initPlay) {
@@ -155,7 +164,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 player.set(surfaceView, seekBar, svLayout);
                 thumbnail.setVisibility(View.GONE);
                 playBtn1.setVisibility(View.GONE);
-                player.playUrl(url);
+                player.playUrl(data.video_uri, 0);
             } else {
                 player.play();
                 playBtn1.setVisibility(View.GONE);
@@ -171,21 +180,22 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         private ImageView thumbnail;
         private ImageView playBtn1;
         private ImageView playBtn2;
-        String url;
+        private HomeData data;
 
-        public PlayBtn2Listener(SeekBar seekBar, SurfaceView surfaceView, LinearLayout svLayout, ImageView thumbnail, ImageView playBtn1, ImageView playBtn2, String url) {
+        public PlayBtn2Listener(SeekBar seekBar, SurfaceView surfaceView, LinearLayout svLayout, ImageView thumbnail, ImageView playBtn1, ImageView playBtn2, HomeData data) {
             this.seekBar = seekBar;
             this.surfaceView = surfaceView;
             this.svLayout = svLayout;
             this.thumbnail = thumbnail;
             this.playBtn1 = playBtn1;
             this.playBtn2 = playBtn2;
-            this.url = url;
+            this.data = data;
         }
 
         @Override
         public void onClick(View v) {
-            if(!url.equals(player.url)){
+            writeToHistory(db, data);
+            if(!data.video_uri.equals(player.url)){
                 player.stop();
             }
             if (!player.initPlay) {
@@ -193,7 +203,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 player.set(surfaceView, seekBar, svLayout);
                 thumbnail.setVisibility(View.GONE);
                 playBtn1.setVisibility(View.GONE);
-                player.playUrl(url);
+                player.playUrl(data.video_uri, 0);
             } else {
                 if(player.isPlaying()) {
                     player.pause();
@@ -228,17 +238,59 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     }
     class ToPlayerActivity implements View.OnClickListener{
         String url;
+        ImageView thumbnail;
+        ImageView playBtn1;
+        ImageView playBtn2;
 
-        public ToPlayerActivity(String url) {
+        public ToPlayerActivity(String url, ImageView thumbnail, ImageView playBtn1, ImageView playBtn2) {
             this.url = url;
+            this.thumbnail = thumbnail;
+            this.playBtn1 = playBtn1;
+            this.playBtn2 = playBtn2;
         }
 
         @Override
         public void onClick(View v) {
+            thumbnail.setVisibility(View.VISIBLE);
+            playBtn1.setVisibility(View.VISIBLE);
+            playBtn2.setImageResource(R.drawable.play_btn2);
+            int progress = player.getProgress();
             Intent intent = new Intent(context, PlayerActivity.class);
             intent.putExtra("url", url);
+            intent.putExtra("progress", progress);
             context.startActivity(intent);
+            player.stop();
         }
     }
 
+    private void writeToHistory(SQLiteDatabase db, HomeData data){
+        if (!search(data.id)) {
+            ContentValues values = new ContentValues();
+            values.put("hate", data.hate);
+            values.put("weixin_url", data.weixin_url);
+            values.put("profile_image", data.profile_image);
+            values.put("love", data.love);
+            values.put("name", data.name);
+            values.put("create_time", data.create_time);
+            values.put("video_uri", data.video_uri);
+            values.put("texts", data.text);
+            values.put("id", data.id);
+            db.insert("History", null, values);
+            values.clear();
+        }
+    }
+
+    private boolean search(int id) {
+        Cursor cursor = db.query("History", null, null, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            do {
+                int ID = cursor.getInt(cursor.getColumnIndex("id"));
+                if (id == ID){
+                    return true;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return false;
+    }
 }

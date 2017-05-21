@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 
 import com.yanyining.redrockexamine.R;
 import com.yanyining.redrockexamine.bean.HomeData;
+import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.presenter.HomePresenter;
 import com.yanyining.redrockexamine.ui.adapter.HomeRecyclerViewAdapter;
 import com.yanyining.redrockexamine.view.HomeActivityImp;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
     private HomePresenter presenter;
     private RecyclerView recyclerView;
+    private MyDatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +25,7 @@ public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
         setContentView(R.layout.activity_home);
 
         initResources();
+        databaseHelper = new MyDatabaseHelper(this, "Data.db", null, 2);
         presenter = new HomePresenter(this);
         presenter.getData();
     }
@@ -35,7 +38,7 @@ public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
     public void setRecyclerView(final ArrayList<HomeData> dataList) {
         LinearLayoutManager lm = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(lm);
-        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList);
+        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList, databaseHelper);
         recyclerView.setAdapter(adapter);
         recyclerView.getRecycledViewPool().setMaxRecycledViews(adapter.getItemViewType(0), 20);
     }

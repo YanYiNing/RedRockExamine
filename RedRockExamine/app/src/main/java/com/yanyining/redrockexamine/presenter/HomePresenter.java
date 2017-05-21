@@ -1,6 +1,7 @@
 package com.yanyining.redrockexamine.presenter;
 
 import com.yanyining.redrockexamine.bean.HomeData;
+import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.model.HomeModel;
 import com.yanyining.redrockexamine.presenter.impl.HomeOnSucessListener;
 import com.yanyining.redrockexamine.presenter.impl.HomePresenterImp;
@@ -13,13 +14,14 @@ import java.util.ArrayList;
  */
 
 public class HomePresenter implements HomePresenterImp, HomeOnSucessListener {
-
+    private MyDatabaseHelper databaseHelper;
     HomeModel model;
     HomeActivity view;
 
     public HomePresenter(HomeActivity view) {
         this.view = view;
-        model = new HomeModel();
+        databaseHelper = new MyDatabaseHelper(view, "Data.db", null, 2);
+        model = new HomeModel(databaseHelper);
     }
 
     @Override

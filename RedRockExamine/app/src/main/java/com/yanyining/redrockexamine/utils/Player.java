@@ -38,6 +38,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     boolean isPlaying = false;
     public boolean initPlay = false;
     public String url;
+    private int progress = 0;
 
     public Player(){
         mTimer.schedule(new mTimerTask(), 0, 1000);
@@ -78,6 +79,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;
         this.linearLayout = linearLayout;
+        mTimer.schedule(new mTimerTask() , 0, 1000);
     }
     class mTimerTask extends TimerTask{
 
@@ -151,6 +153,17 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         }
 
     }
+
+    public int getProgress(){
+        return mediaPlayer.getCurrentPosition();
+    }
+
+    public void setProgress(int progress){
+        int duration = mediaPlayer.getDuration();
+        long pos = skbProgress.getMax() * progress / duration;
+        skbProgress.setProgress((int) pos);
+        mediaPlayer.seekTo(progress);
+    }
     public boolean isPlaying(){
         return isPlaying;
     }
@@ -161,9 +174,10 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         isPlaying = true;
     }
 
-    public void playUrl(String videoUrl)
+    public void playUrl(String videoUrl, int progress)
     {
         url = videoUrl;
+        this.progress = progress;
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(videoUrl);
@@ -201,6 +215,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             mediaPlayer.release();
             mediaPlayer = null;
             isPlaying = false;
+            progress = 0;
             Log.d(TAG, "stop: ");
         }
     }
@@ -288,6 +303,9 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         arg0.start();
         isPlaying = true;
         Log.e("mediaPlayer", "onPrepared");
+        if (progress != 0){
+            setProgress(progress);
+        }
     }
 
     @Override

@@ -7,6 +7,7 @@ package com.yanyining.redrockexamine.bean;
 public class HomeData {
     public int love;
     public int hate;
+    public int id;
     public String text;
     public String weixin_url;
     public String profile_image;

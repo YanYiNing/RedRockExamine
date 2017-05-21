@@ -32,6 +32,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private ImageView download;
 
     private String url;
+    private int progress;
     private Player player;
 
     private boolean isHide = true;
@@ -44,12 +45,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         window.setFlags(flag, flag);
         setContentView(R.layout.activity_player);
 
-        if (savedInstanceState != null) {
-            url = savedInstanceState.getString("Url");
-        }else {
-            Intent intent = getIntent();
-            url = intent.getStringExtra("url");
-        }
+        Intent intent = getIntent();
+        url = intent.getStringExtra("url");
+        progress = intent.getIntExtra("progress", 0);
 
         initResource();
         initPlayer();
@@ -63,9 +61,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                player.playUrl(url);
+                player.playUrl(url, progress);
             }
-        }, 500);
+        }, 100);
     }
 
     private void initResource() {
