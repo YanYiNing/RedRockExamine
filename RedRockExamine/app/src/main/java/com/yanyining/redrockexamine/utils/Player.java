@@ -1,5 +1,6 @@
 package com.yanyining.redrockexamine.utils;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -38,17 +39,20 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     boolean isPlaying = false;
     public boolean initPlay = false;
     public String url;
+    private SQLiteDatabase db;
     private int progress = 0;
 
-    public Player(){
+    public Player(SQLiteDatabase db){
+        this.db = db;
         mTimer.schedule(new mTimerTask(), 0, 1000);
     }
 
-    public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout){
+    public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, SQLiteDatabase db){
         mSurfaceViewWidth = 1080;
         mSurfaceViewHeight = 1920;
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
+        this.db = db;
         this.skbProgress = skbProgress;
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;

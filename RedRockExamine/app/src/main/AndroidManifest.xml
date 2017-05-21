@@ -19,11 +19,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.HomeActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".ui.PlayerActivity"
+        <activity
+            android:name=".ui.HomeActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.PlayerActivity"
             android:configChanges="orientation|keyboard|screenSize" />
-
+        <activity android:name=".ui.HistoryActivity"></activity>
     </application>
 
 </manifest>
