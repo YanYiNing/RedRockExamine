@@ -120,6 +120,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
         @Override
         public void onClick(View v) {
+
             player.set(surfaceView, seekBar, svLayout);
             thumbnail.setVisibility(View.GONE);
             playBtn1.setVisibility(View.GONE);

@@ -31,6 +31,8 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     private LinearLayout linearLayout;
 
     private Timer mTimer = new Timer();
+    private int lw = 1080;
+    private int lh = 1920;
 
     public Player(){};
 
@@ -92,6 +94,38 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             }
         };
     };
+
+    public void reDraw(){
+
+        int vWidth = mediaPlayer.getVideoWidth();
+        int vHeight = mediaPlayer.getVideoHeight();
+
+        // 该LinearLayout的父容器 android:orientation="vertical" 必须
+        lw = lw + lh;
+        lh = lw - lh;
+        lw = lw - lh;
+
+        // 如果video的宽或者高超出了当前屏幕的大小，则要进行缩放
+        float wRatio = (float) vWidth / (float) lw;
+        float hRatio = (float) vHeight / (float) lh;
+
+        // 选择大的一个进行缩放
+        float ratio = Math.max(wRatio, hRatio);
+        vWidth = (int) Math.ceil((float) vWidth / ratio);
+        vHeight = (int) Math.ceil((float) vHeight / ratio);
+
+        // 设置surfaceView的布局参数
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) surfaceView.getLayoutParams();
+
+        if (wRatio > hRatio){
+            int margin = (lh - vHeight) / 2;
+            lp.setMargins(0, margin, 0, margin);
+        } else {
+            int margin = (lw - vWidth) / 2;
+            lp.setMargins(margin, 0, margin, 0);
+        }
+
+    }
 
     public void play()
     {
@@ -201,7 +235,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         vHeight = (int) Math.ceil((float) vHeight / ratio);
 
         // 设置surfaceView的布局参数
-        LinearLayout.LayoutParams lp= new LinearLayout.LayoutParams(vWidth, vHeight);
+        LinearLayout.LayoutParams lp= (LinearLayout.LayoutParams) surfaceView.getLayoutParams();
 
         if (wRatio > hRatio){
             int margin = (lh - vHeight) / 2;

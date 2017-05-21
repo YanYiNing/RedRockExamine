@@ -21,7 +21,7 @@
         </activity>
         <activity android:name=".ui.HomeActivity" />
         <activity android:name=".ui.PlayerActivity"
-            android:launchMode="singleTask"
+            android:configChanges="orientation|keyboard|screenSize"
             />
 
     </application>

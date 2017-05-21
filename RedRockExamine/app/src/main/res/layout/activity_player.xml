@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
+    android:id="@+id/player_frame_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:id="@+id/player_layout"
+        android:layout_height="match_parent"
+        android:id="@+id/player_sv_layout"
         android:orientation="vertical"
         android:background="@color/black">
 
@@ -22,38 +21,62 @@
 
     </LinearLayout>
 
-    <SeekBar
-        android:id="@+id/player_seek_bar"
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
-        />
+    <ImageView
+        android:id="@+id/player_play_btn1"
+        android:src="@drawable/play_btn1"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"/>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/player_play_button"
-            android:text="播放"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/player_pause_button"
-            android:text="暂停"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/player_replay_button"
-            android:text="重播"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/player_stop_button"
-            android:text="停止"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+        <LinearLayout
+            android:id="@+id/player_control_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#333333"
+            >
+
+            <ImageView
+                android:id="@+id/player_play_btn2"
+                android:src="@drawable/play_button"
+                android:padding="3dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+            <SeekBar
+                android:id="@+id/player_seek_bar"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:layout_height="10dp"
+                />
+
+            <ImageView
+                android:id="@+id/player_download"
+                android:padding="3dp"
+                android:src="@drawable/download"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+            <ImageView
+                android:id="@+id/player_fullscreen_exit"
+                android:padding="3dp"
+                android:src="@drawable/fullscreen_exit"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+
+</FrameLayout>
