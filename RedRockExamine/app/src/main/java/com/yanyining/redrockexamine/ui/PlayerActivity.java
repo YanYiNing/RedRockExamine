@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 import com.yanyining.redrockexamine.R;
+import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.utils.Player;
 
 public class PlayerActivity extends AppCompatActivity implements View.OnClickListener {
@@ -36,6 +37,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private Player player;
 
     private boolean isHide = true;
+    private MyDatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         window.setFlags(flag, flag);
         setContentView(R.layout.activity_player);
 
+        databaseHelper = new MyDatabaseHelper(this, "Data.db", null, 2);
         Intent intent = getIntent();
         url = intent.getStringExtra("url");
         progress = intent.getIntExtra("progress", 0);
@@ -57,7 +60,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         int width = dm.widthPixels;
         int height = dm.heightPixels;
-        player = new Player(sv, seekBar, svLayout, width, height);
+        player = new Player(sv, seekBar, svLayout, width, height, databaseHelper);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

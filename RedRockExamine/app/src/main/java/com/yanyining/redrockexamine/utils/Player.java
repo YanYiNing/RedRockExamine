@@ -13,6 +13,8 @@ import android.view.SurfaceView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
+import com.yanyining.redrockexamine.db.MyDatabaseHelper;
+
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -75,13 +77,14 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         mTimer.schedule(new mTimerTask() , 0, 1000);
     }
 
-    public Player(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, int weight, int height)
+    public Player(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, int weight, int height, MyDatabaseHelper myDatabaseHelper)
     {
         mSurfaceViewWidth = weight;
         mSurfaceViewHeight = height;
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
         this.skbProgress = skbProgress;
+        this.db = myDatabaseHelper.getWritableDatabase();
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;
         this.linearLayout = linearLayout;
@@ -119,7 +122,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             if(mediaPlayer != null) {
                 int position = mediaPlayer.getCurrentPosition();
                 int duration = mediaPlayer.getDuration();
-                nowProgress = duration;
+                nowProgress = position;
 
                 if (duration > 0) {
                     long pos = skbProgress.getMax() * position / duration;
@@ -187,7 +190,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     }
 
     public int getProgress(){
-        return mediaPlayer.getCurrentPosition();
+        return nowProgress;
     }
 
     public void setProgress(int progress){
