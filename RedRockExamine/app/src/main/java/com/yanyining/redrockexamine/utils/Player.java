@@ -1,5 +1,7 @@
 package com.yanyining.redrockexamine.utils;
 
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -41,18 +43,18 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     public String url;
     private SQLiteDatabase db;
     private int progress = 0;
+    private int nowProgress = 0;
 
     public Player(SQLiteDatabase db){
         this.db = db;
         mTimer.schedule(new mTimerTask(), 0, 1000);
     }
 
-    public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, SQLiteDatabase db){
+    public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout){
         mSurfaceViewWidth = 1080;
         mSurfaceViewHeight = 1920;
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
-        this.db = db;
         this.skbProgress = skbProgress;
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;
@@ -117,14 +119,40 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             if(mediaPlayer != null) {
                 int position = mediaPlayer.getCurrentPosition();
                 int duration = mediaPlayer.getDuration();
+                nowProgress = duration;
 
                 if (duration > 0) {
                     long pos = skbProgress.getMax() * position / duration;
                     skbProgress.setProgress((int) pos);
                 }
             }
-        };
+        }
     };
+
+    public int searchFromHistory(String url){
+        Cursor cursor = db.query("History", null, null, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            do {
+                String u = cursor.getString(cursor.getColumnIndex("video_uri"));
+                if (u.equals(url)){
+                    int i = cursor.getInt(cursor.getColumnIndex("progress"));
+                    if(i != 0) {
+                        return i;
+                    }else {
+                        return 0;
+                    }
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return 0;
+    }
+
+    public void writeToHistory(){
+        ContentValues values = new ContentValues();
+        values.put("progress", nowProgress);
+        db.update("History", values, "video_uri = ?", new String[]{url});
+    }
 
     public void reDraw(){
 
@@ -168,6 +196,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         skbProgress.setProgress((int) pos);
         mediaPlayer.seekTo(progress);
     }
+
     public boolean isPlaying(){
         return isPlaying;
     }
@@ -182,6 +211,8 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     {
         url = videoUrl;
         this.progress = progress;
+        this.progress = searchFromHistory(videoUrl);
+
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(videoUrl);
@@ -212,6 +243,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
 
     public void stop()
     {
+        writeToHistory();
         while (mediaPlayer != null) {
             url = null;
             initPlay = false;

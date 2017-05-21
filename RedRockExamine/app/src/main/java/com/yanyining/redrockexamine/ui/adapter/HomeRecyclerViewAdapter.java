@@ -21,6 +21,7 @@ import com.yanyining.redrockexamine.bean.HomeData;
 import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.ui.PlayerActivity;
 import com.yanyining.redrockexamine.utils.Player;
+import com.yanyining.redrockexamine.utils.downloadtools.DownloadService;
 import com.yanyining.redrockexamine.utils.imageTools.ImageLoader;
 
 import java.util.ArrayList;
@@ -34,13 +35,16 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     private MyDatabaseHelper databaseHelper;
     private SQLiteDatabase db;
     private Context context;
-    private static Player player = new Player();
+    private Player player;
     boolean isLayoutHide = true;
+    private DownloadService.DownloadBinder downloadBinder;
 
-    public HomeRecyclerViewAdapter(ArrayList<HomeData> dataList, MyDatabaseHelper databaseHelper) {
+    public HomeRecyclerViewAdapter(ArrayList<HomeData> dataList, MyDatabaseHelper databaseHelper, DownloadService.DownloadBinder downloadBinder) {
         this.dataList = dataList;
         this.databaseHelper = databaseHelper;
         db = databaseHelper.getWritableDatabase();
+        player = new Player(db);
+        this.downloadBinder = downloadBinder;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder{
@@ -110,7 +114,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         holder.frameLayout.setOnClickListener(new HideOrShowLayout(holder.controlLayout));
         holder.playBtn1.setOnClickListener(new PlayBtn1Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, data));
         holder.playBtn2.setOnClickListener(new PlayBtn2Listener(holder.seekBar, holder.surfaceView, holder.svLayout, holder.thumbnail, holder.playBtn1, holder.playBtn2, data));
-
+        holder.download.setOnClickListener(new DownloadListener(holder.url));
     }
 
     @Override
@@ -134,6 +138,19 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         super.onViewRecycled(holder);
     }
 
+    class DownloadListener implements View.OnClickListener{
+
+        private String url;
+
+        public DownloadListener(String url) {
+            this.url = url;
+        }
+
+        @Override
+        public void onClick(View v) {
+            downloadBinder.startDownload(url);
+        }
+    }
     class PlayBtn1Listener implements View.OnClickListener{
         private SeekBar seekBar;
         private SurfaceView surfaceView;
@@ -156,7 +173,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         @Override
         public void onClick(View v) {
             writeToHistory(db, data);
-            if(!data.video_uri.equals(player.url)){
+            if(!data.video_uri.equals(player.url)&&player.url!=null){
                 player.stop();
             }
             if (!player.initPlay) {
@@ -195,7 +212,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         @Override
         public void onClick(View v) {
             writeToHistory(db, data);
-            if(!data.video_uri.equals(player.url)){
+            if(!data.video_uri.equals(player.url)&&player.url!=null){
                 player.stop();
             }
             if (!player.initPlay) {
@@ -293,4 +310,5 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         cursor.close();
         return false;
     }
+
 }
