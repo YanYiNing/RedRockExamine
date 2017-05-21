@@ -26,7 +26,8 @@
         android:src="@drawable/play_btn1"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:visibility="gone"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -47,7 +48,7 @@
 
             <ImageView
                 android:id="@+id/player_play_btn2"
-                android:src="@drawable/play_button"
+                android:src="@drawable/pause"
                 android:padding="3dp"
                 android:layout_width="30dp"
                 android:layout_height="30dp" />

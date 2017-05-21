@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by YanYiNing on 2017/5/20.
  */
@@ -33,8 +35,13 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     private Timer mTimer = new Timer();
     private int lw = 1080;
     private int lh = 1920;
+    boolean isPlaying = false;
+    public boolean initPlay = false;
+    public String url;
 
-    public Player(){};
+    public Player(){
+        mTimer.schedule(new mTimerTask(), 0, 1000);
+    }
 
     public void set(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout){
         mSurfaceViewWidth = 1080;
@@ -45,9 +52,10 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;
         this.linearLayout = linearLayout;
-        mTimer.schedule(mTimerTask, 0, 1000);
         try {
-            mediaPlayer = new MediaPlayer();
+            if (mediaPlayer == null) {
+                mediaPlayer = new MediaPlayer();
+            }
             mediaPlayer.setDisplay(surfaceHolder);
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setOnBufferingUpdateListener(this);
@@ -56,6 +64,8 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
             Log.e("mediaPlayer", "error", e);
         }
         Log.e("mediaPlayer", "surface created");
+        initPlay = true;
+        mTimer.schedule(new mTimerTask() , 0, 1000);
     }
 
     public Player(SurfaceView surfaceView, SeekBar skbProgress, LinearLayout linearLayout, int weight, int height)
@@ -68,10 +78,23 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         skbProgress.setOnSeekBarChangeListener(change);
         this.surfaceView = surfaceView;
         this.linearLayout = linearLayout;
-        mTimer.schedule(mTimerTask, 0, 1000);
     }
+    class mTimerTask extends TimerTask{
 
-    TimerTask mTimerTask = new TimerTask() {
+        @Override
+        public void run() {
+            if(mediaPlayer==null)
+                return;
+            else{
+                if (mediaPlayer.isPlaying()) {
+                    if(skbProgress != null)
+                        if(skbProgress.isPressed() == false)
+                            handleProgress.sendEmptyMessage(0);
+                }
+            }
+        }
+    }
+    /*TimerTask mTimerTask = new TimerTask() {
         @Override
         public void run() {
             if(mediaPlayer==null)
@@ -80,17 +103,19 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
                 handleProgress.sendEmptyMessage(0);
             }
         }
-    };
+    };*/
 
     Handler handleProgress = new Handler() {
         public void handleMessage(Message msg) {
 
-            int position = mediaPlayer.getCurrentPosition();
-            int duration = mediaPlayer.getDuration();
+            if(mediaPlayer != null) {
+                int position = mediaPlayer.getCurrentPosition();
+                int duration = mediaPlayer.getDuration();
 
-            if (duration > 0) {
-                long pos = skbProgress.getMax() * position / duration;
-                skbProgress.setProgress((int) pos);
+                if (duration > 0) {
+                    long pos = skbProgress.getMax() * position / duration;
+                    skbProgress.setProgress((int) pos);
+                }
             }
         };
     };
@@ -126,14 +151,19 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         }
 
     }
+    public boolean isPlaying(){
+        return isPlaying;
+    }
 
     public void play()
     {
         mediaPlayer.start();
+        isPlaying = true;
     }
 
     public void playUrl(String videoUrl)
     {
+        url = videoUrl;
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(videoUrl);
@@ -159,19 +189,25 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     public void pause()
     {
         mediaPlayer.pause();
+        isPlaying = false;
     }
 
     public void stop()
     {
-        if (mediaPlayer != null) {
+        while (mediaPlayer != null) {
+            url = null;
+            initPlay = false;
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
+            isPlaying = false;
+            Log.d(TAG, "stop: ");
         }
     }
 
     private SeekBar.OnSeekBarChangeListener change = new SeekBar.OnSeekBarChangeListener() {
         int progress;
+
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress,
                                       boolean fromUser) {
@@ -196,6 +232,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
 
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
+
     }
 
     @Override
@@ -213,7 +250,8 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder arg0) {}
+    public void surfaceDestroyed(SurfaceHolder arg0) {
+    }
 
 
     @Override
@@ -248,7 +286,7 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         surfaceView.setLayoutParams(lp);
 
         arg0.start();
-
+        isPlaying = true;
         Log.e("mediaPlayer", "onPrepared");
     }
 
@@ -259,10 +297,11 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
 
     @Override
     public void onBufferingUpdate(MediaPlayer arg0, int bufferingProgress) {
-        skbProgress.setSecondaryProgress(bufferingProgress);
-        int currentProgress = skbProgress.getMax()*mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
-        Log.e(currentProgress+"% play_btn1", bufferingProgress + "% buffer");
-
+        if(mediaPlayer != null) {
+            skbProgress.setSecondaryProgress(bufferingProgress);
+            int currentProgress = skbProgress.getMax() * mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration();
+            Log.e(currentProgress + "% play_btn1", bufferingProgress + "% buffer");
+        }
     }
 
     @Override
@@ -270,5 +309,6 @@ public class Player implements MediaPlayer.OnBufferingUpdateListener,
         mediaPlayer.release();
         return false;
     }
+
 
 }

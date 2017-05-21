@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,9 +35,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private Player player;
 
     private boolean isHide = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Window window = getWindow();
+        int flag= WindowManager.LayoutParams.FLAG_FULLSCREEN;
+        window.setFlags(flag, flag);
         setContentView(R.layout.activity_player);
 
         if (savedInstanceState != null) {
@@ -59,7 +65,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             public void run() {
                 player.playUrl(url);
             }
-        }, 100);
+        }, 500);
     }
 
     private void initResource() {
@@ -85,10 +91,20 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.player_play_btn1:
-                player.playUrl(url);
+                player.play();
+                playBtn1.setVisibility(View.GONE);
+                playBtn2.setImageResource(R.drawable.pause);
                 break;
             case R.id.player_play_btn2:
-                player.pause();
+                if(player.isPlaying()) {
+                    player.pause();
+                    playBtn2.setImageResource(R.drawable.play_btn2);
+                    playBtn1.setVisibility(View.VISIBLE);
+                } else {
+                    player.play();
+                    playBtn2.setImageResource(R.drawable.pause);
+                    playBtn1.setVisibility(View.GONE);
+                }
                 break;
             case R.id.player_fullscreen_exit:
                 player.stop();
@@ -116,8 +132,20 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     @Override
+    protected void onStop() {
+        player.stop();
+        super.onStop();
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         player.reDraw();
         super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        finish();
     }
 }
