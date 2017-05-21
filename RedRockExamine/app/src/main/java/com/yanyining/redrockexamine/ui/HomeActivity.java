@@ -86,7 +86,7 @@ public class HomeActivity extends AppCompatActivity implements HomeActivityImp {
     public void setRecyclerView(final ArrayList<HomeData> dataList) {
         LinearLayoutManager lm = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(lm);
-        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList, databaseHelper);
+        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList, databaseHelper, downloadBinder);
         recyclerView.setAdapter(adapter);
         recyclerView.getRecycledViewPool().setMaxRecycledViews(adapter.getItemViewType(0), 20);
     }

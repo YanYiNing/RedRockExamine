@@ -13,10 +13,12 @@ import com.yanyining.redrockexamine.R;
 import com.yanyining.redrockexamine.bean.HomeData;
 import com.yanyining.redrockexamine.db.MyDatabaseHelper;
 import com.yanyining.redrockexamine.ui.adapter.HomeRecyclerViewAdapter;
+import com.yanyining.redrockexamine.utils.downloadtools.DownloadService;
 
 import java.util.ArrayList;
 
 public class HistoryActivity extends AppCompatActivity {
+    private DownloadService.DownloadBinder downloadBinder;
     private RecyclerView recyclerView;
     private Toolbar toolbar;
     private MyDatabaseHelper databaseHelper;
@@ -65,7 +67,7 @@ public class HistoryActivity extends AppCompatActivity {
     public void setRecyclerView(final ArrayList<HomeData> dataList) {
         LinearLayoutManager lm = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(lm);
-        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList, databaseHelper);
+        HomeRecyclerViewAdapter adapter = new HomeRecyclerViewAdapter(dataList, databaseHelper, downloadBinder);
         recyclerView.setAdapter(adapter);
         recyclerView.getRecycledViewPool().setMaxRecycledViews(adapter.getItemViewType(0), 20);
     }
